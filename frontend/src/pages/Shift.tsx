@@ -15,6 +15,9 @@ import { useHistory } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Alert from "@material-ui/lab/Alert";
 import { Link as RouterLink } from "react-router-dom";
+import { styled } from "@material-ui/styles";
+import { Button } from "@material-ui/core";
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,6 +30,12 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'white',
     color: theme.color.turquoise
   },
+  publishBtn: {
+    backgroundColor: theme.color.turqouise,
+    color: "white",
+    marginLeft: "auto",
+  },
+
 }));
 
 interface ActionButtonProps {
@@ -159,6 +168,18 @@ const Shift = () => {
             ) : (
               <></>
             )}
+            <Grid container spacing={2}>
+              <Grid item xs={10}>
+                <Button>qweqwe</Button>
+              </Grid>
+              <Grid item xs={2}>
+
+                <Button variant="contained"
+                  color="primary"
+                  className={classes.publishBtn} >Publish</Button>
+              </Grid>
+            </Grid>
+
             <DataTable
               title="Shifts"
               columns={columns}
@@ -166,6 +187,9 @@ const Shift = () => {
               pagination
               progressPending={isLoading}
             />
+
+
+
           </CardContent>
         </Card>
       </Grid>

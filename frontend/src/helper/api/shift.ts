@@ -18,6 +18,12 @@ export const createShifts = async (payload: any) => {
   return data;
 };
 
+export const publishShift = async (payload: any) => {
+  const api = getAxiosInstance()
+  const { data } = await api.post("/shifts", payload);
+  return data;
+};
+
 export const updateShiftById = async (id: string, payload: any) => {
   const api = getAxiosInstance()
   const { data } = await api.patch(`/shifts/${id}`, payload);
