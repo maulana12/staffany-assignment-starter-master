@@ -73,11 +73,20 @@ const Shift = () => {
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState<boolean>(false);
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   const onDeleteClick = (id: string) => {
     setSelectedId(id);
     setShowDeleteConfirm(true);
+  };
+
+  const onPublishClick = () => {
+    setShowPublishConfirm(true);
+  };
+
+  const onClosePublishClick = () => {
+    setShowPublishConfirm(false);
   };
 
   const onCloseDeleteDialog = () => {
@@ -132,6 +141,28 @@ const Shift = () => {
     },
   ];
 
+  const publishShiftForWeek = async () => {
+    try {
+      setDeleteLoading(true);
+      setErrMsg("");
+
+      // if (selectedId === null) {
+      //   throw new Error("ID is null");
+      // }
+
+      console.log("publish");
+
+      //await deleteShiftById(selectedId);
+
+    } catch (error) {
+      const message = getErrorMessage(error);
+      setErrMsg(message);
+    } finally {
+      setDeleteLoading(false);
+      onClosePublishClick();
+    }
+  };
+
   const deleteDataById = async () => {
     try {
       setDeleteLoading(true);
@@ -175,9 +206,13 @@ const Shift = () => {
               <Grid item xs={2}>
 
                 <Button variant="contained"
-                  color="primary"
-                  className={classes.publishBtn} >Publish</Button>
+                  color="primary" 
+                  onClick={(e) => onPublishClick()}
+                  className={classes.publishBtn}>Publish
+                  
+                  </Button>
               </Grid>
+              
             </Grid>
 
             <DataTable
@@ -187,8 +222,6 @@ const Shift = () => {
               pagination
               progressPending={isLoading}
             />
-
-
 
           </CardContent>
         </Card>
@@ -209,6 +242,15 @@ const Shift = () => {
         onYes={deleteDataById}
         loading={deleteLoading}
       />
+       <ConfirmDialog
+        title="Publish Confirm"
+        description={`Do you want to Publish this week shift ?`}
+        onClose={onClosePublishClick}
+        open={showPublishConfirm}
+        onYes={publishShiftForWeek}
+        loading={deleteLoading}
+      />
+
     </Grid>
   );
 };
