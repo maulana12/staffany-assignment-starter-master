@@ -1,6 +1,14 @@
+import { ModeComment } from "@material-ui/icons";
 import { getAxiosInstance } from ".";
 
 export const getShifts = async () => {
+  const api = getAxiosInstance()
+  const { data } = await api.get("/shifts?order[date]=DESC&order[startTime]=ASC");
+  return data;
+};
+
+export const getShiftsPerWeek = async () => {
+  
   const api = getAxiosInstance()
   const { data } = await api.get("/shifts?order[date]=DESC&order[startTime]=ASC");
   return data;
@@ -21,6 +29,7 @@ export const createShifts = async (payload: any) => {
 export const publishShift = async (payload: any) => {
   const api = getAxiosInstance()
   const { data } = await api.post("/shifts", payload);
+  
   return data;
 };
 
