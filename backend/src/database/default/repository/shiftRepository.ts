@@ -55,6 +55,16 @@ export const updateById = async (
   return findById(id);
 };
 
+export const publishShift = async (
+  id: string,
+  payload: QueryDeepPartialEntity<Shift>
+): Promise<Shift> => {
+  logger.info("publish shift");
+  const repository = getRepository(Shift);
+  await repository.update(id, payload);
+  return findById(id);
+};
+
 export const deleteById = async (
   id: string | string[]
 ): Promise<DeleteResult> => {

@@ -33,6 +33,11 @@ function App() {
               <ShiftForm />
             </Dashboard>
           </Route>
+          <Route exact path="/shift/publish">
+            <Dashboard>
+              <ShiftForm />
+            </Dashboard>
+          </Route>
         </Switch>
       </BrowserRouter>
     </ThemeProvider>

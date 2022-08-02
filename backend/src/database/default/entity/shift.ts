@@ -23,4 +23,7 @@ export default class Shift extends BaseTimestamp {
     type: "time",
   })
   endTime: string;
+
+  @Column()
+  isPublish: string;
 }

@@ -4,9 +4,8 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import { makeStyles } from "@material-ui/core/styles";
 import { getErrorMessage } from "../helper/error/index";
-import { deleteShiftById, getShifts } from "../helper/api/shift";
+import { deleteShiftById, getShifts, getShiftById } from "../helper/api/shift";
 import DataTable from "react-data-table-component";
-import IconButton from "@material-ui/core/IconButton";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
 import Fab from "@material-ui/core/Fab";
@@ -15,6 +14,13 @@ import { useHistory } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import Alert from "@material-ui/lab/Alert";
 import { Link as RouterLink } from "react-router-dom";
+import IconButton from "@material-ui/core/IconButton";
+
+import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
+
+import ChevronRightIcon from "@material-ui/icons/ChevronRight";
+import { Button } from "@material-ui/core";
+
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -27,6 +33,12 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'white',
     color: theme.color.turquoise
   },
+  publishBtn: {
+    backgroundColor: theme.color.turqouise,
+    color: "white",
+    marginLeft: "auto",
+  },
+
 }));
 
 interface ActionButtonProps {
@@ -61,14 +73,29 @@ const Shift = () => {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-
+  const [firstDtinWeek, setFirstDtInWeek] = useState<string | null>(null);
+  const [lastDtinWeek, setLastDtInWeek] = useState<string | null>(null);
+  const [nextDate, setNextDate] = useState<number>(1);
+  const [previousWeek, setPreviousWeek] = useState<any>(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  const [showPublishConfirm, setShowPublishConfirm] = useState<boolean>(false);
+  const [publishShift, setPublishWeek] = useState("Y");
   const [deleteLoading, setDeleteLoading] = useState<boolean>(false);
 
   const onDeleteClick = (id: string) => {
     setSelectedId(id);
     setShowDeleteConfirm(true);
+  };
+
+  const onPublishClick = () => {
+
+    setShowPublishConfirm(true);
+  };
+
+
+  const onClosePublishClick = () => {
+    setShowPublishConfirm(false);
   };
 
   const onCloseDeleteDialog = () => {
@@ -77,6 +104,19 @@ const Shift = () => {
   };
 
   useEffect(() => {
+    const getCurrentWeek = async () => {
+      try {
+        setIsLoading(true);
+        setErrMsg("");
+        changeWeek();
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setErrMsg(message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
     const getData = async () => {
       try {
         setIsLoading(true);
@@ -90,6 +130,7 @@ const Shift = () => {
         setIsLoading(false);
       }
     };
+    getCurrentWeek();
 
     getData();
   }, []);
@@ -122,6 +163,37 @@ const Shift = () => {
       ),
     },
   ];
+
+
+  const publishShiftForWeek = async () => {
+
+    console.log("uoi");
+  };
+
+  const previousClick = () => {
+   
+      setIsLoading(true);
+      setNextDate(nextDate - 7);
+      changeWeek();
+
+  };
+
+  const nextClick = () => {
+    setNextDate(nextDate + 7);
+    changeWeek();
+  };
+
+  const changeWeek = async () => {
+    let wDate = new Date();
+    let dDay = wDate.getDay() > 0 ? wDate.getDay() : 7;
+    let first = wDate.getDate() - dDay + nextDate;
+    let firstDayWeek = new Date(wDate.setDate(first));
+    let lastDayWeek = new Date(wDate.setDate(firstDayWeek.getDate() + 6));
+    console.log(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
+
+    setFirstDtInWeek(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
+    setLastDtInWeek(lastDayWeek.getUTCDate() + " " + lastDayWeek.toLocaleString('en-us', { month: 'long' }));
+  };
 
   const deleteDataById = async () => {
     try {
@@ -159,6 +231,35 @@ const Shift = () => {
             ) : (
               <></>
             )}
+            <Grid container spacing={2}>
+              <Grid item xs={10}>
+
+
+                <div >
+                  <IconButton onClick={previousClick}>
+                    <ChevronLeftIcon />
+                  </IconButton>
+                  {firstDtinWeek} - {lastDtinWeek}
+                  <IconButton >
+                    <ChevronRightIcon onClick={nextClick} />
+                  </IconButton>
+                </div>
+
+
+
+              </Grid>
+              <Grid item xs={2}>
+
+                <Button variant="contained"
+                  color="primary"
+                  onClick={(e) => onPublishClick()}
+                  className={classes.publishBtn}>Publish
+
+                </Button>
+              </Grid>
+
+            </Grid>
+
             <DataTable
               title="Shifts"
               columns={columns}
@@ -166,6 +267,7 @@ const Shift = () => {
               pagination
               progressPending={isLoading}
             />
+
           </CardContent>
         </Card>
       </Grid>
@@ -185,6 +287,15 @@ const Shift = () => {
         onYes={deleteDataById}
         loading={deleteLoading}
       />
+      <ConfirmDialog
+        title="Publish Confirm"
+        description={`Do you want to Publish this week shift ?`}
+        onClose={onClosePublishClick}
+        open={showPublishConfirm}
+        onYes={publishShiftForWeek}
+        loading={deleteLoading}
+      />
+
     </Grid>
   );
 };
