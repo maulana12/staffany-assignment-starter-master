@@ -3,6 +3,7 @@ export interface ICreateShift {
   date: string;
   startTime: string;
   endTime: string;
+  isPublish: string;
 }
 
 export interface IUpdateShift {

@@ -4,7 +4,7 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import { makeStyles } from "@material-ui/core/styles";
 import { getErrorMessage } from "../helper/error/index";
-import { deleteShiftById, getShifts, getShiftById } from "../helper/api/shift";
+import { deleteShiftById,  getShiftsPerWeek, getShiftById  } from "../helper/api/shift";
 import DataTable from "react-data-table-component";
 import DeleteIcon from "@material-ui/icons/Delete";
 import EditIcon from "@material-ui/icons/Edit";
@@ -20,8 +20,12 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
 
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import { Button } from "@material-ui/core";
+import { setTimeout } from "timers";
 
-
+function delay(time: number) {
+  return new Promise(resolve => setTimeout(resolve, time));
+}
+var nextDate = 0;
 const useStyles = makeStyles((theme) => ({
   root: {
     minWidth: 275,
@@ -69,14 +73,13 @@ const ActionButton: FunctionComponent<ActionButtonProps> = ({
 const Shift = () => {
   const classes = useStyles();
   const history = useHistory();
-
+  const fromDate = new Date();
+  const toDate = new Date();
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
   const [firstDtinWeek, setFirstDtInWeek] = useState<string | null>(null);
   const [lastDtinWeek, setLastDtInWeek] = useState<string | null>(null);
-  const [nextDate, setNextDate] = useState<number>(1);
-  const [previousWeek, setPreviousWeek] = useState<any>(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState<boolean>(false);
@@ -104,11 +107,11 @@ const Shift = () => {
   };
 
   useEffect(() => {
-    const getCurrentWeek = async () => {
+    const getCurrentWeek =  () => {
       try {
         setIsLoading(true);
         setErrMsg("");
-        changeWeek();
+        updateWeekView();
       } catch (error) {
         const message = getErrorMessage(error);
         setErrMsg(message);
@@ -121,7 +124,7 @@ const Shift = () => {
       try {
         setIsLoading(true);
         setErrMsg("");
-        const { results } = await getShifts();
+        const { results } = await getShiftsPerWeek(fromDate, toDate);
         setRows(results);
       } catch (error) {
         const message = getErrorMessage(error);
@@ -171,28 +174,33 @@ const Shift = () => {
   };
 
   const previousClick = () => {
-   
-      setIsLoading(true);
-      setNextDate(nextDate - 7);
-      changeWeek();
+ 
+    nextDate=nextDate - 7;
+   // delay(1000).then(() => updateWeekView());
+    updateWeekView()
 
   };
 
   const nextClick = () => {
-    setNextDate(nextDate + 7);
-    changeWeek();
+    nextDate=nextDate + 7;
+    updateWeekView()
+   // delay(1000).then(() => updateWeekView());
+    //
   };
 
-  const changeWeek = async () => {
+  const updateWeekView = async () => {
     let wDate = new Date();
     let dDay = wDate.getDay() > 0 ? wDate.getDay() : 7;
-    let first = wDate.getDate() - dDay + nextDate;
+    
+    let first = wDate.getDate() - dDay + nextDate ;
     let firstDayWeek = new Date(wDate.setDate(first));
     let lastDayWeek = new Date(wDate.setDate(firstDayWeek.getDate() + 6));
     console.log(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
 
     setFirstDtInWeek(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
     setLastDtInWeek(lastDayWeek.getUTCDate() + " " + lastDayWeek.toLocaleString('en-us', { month: 'long' }));
+    const { results } = await getShiftsPerWeek(firstDayWeek, lastDayWeek);
+    setRows(results);
   };
 
   const deleteDataById = async () => {
@@ -234,7 +242,6 @@ const Shift = () => {
             <Grid container spacing={2}>
               <Grid item xs={10}>
 
-
                 <div >
                   <IconButton onClick={previousClick}>
                     <ChevronLeftIcon />
@@ -244,8 +251,6 @@ const Shift = () => {
                     <ChevronRightIcon onClick={nextClick} />
                   </IconButton>
                 </div>
-
-
 
               </Grid>
               <Grid item xs={2}>
