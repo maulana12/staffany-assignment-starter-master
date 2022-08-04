@@ -12,4 +12,5 @@ export interface IUpdateShift {
   startTime?: string;
   endTime?: string;
   weekId? : string;
+  isPublish: string;
 }
