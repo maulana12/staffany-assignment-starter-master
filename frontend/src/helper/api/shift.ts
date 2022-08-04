@@ -7,10 +7,22 @@ export const getShifts = async () => {
   return data;
 };
 
-export const getShiftsPerWeek = async () => {
-  
+export const getShiftsPerWeek = async (fromDate: Date, toDate: Date) => {
+
   const api = getAxiosInstance()
   const { data } = await api.get("/shifts?order[date]=DESC&order[startTime]=ASC");
+ 
+  var dataMap = data.results;
+
+  var listData = [];
+  for (var val of dataMap) {
+    var objDate = new Date(val.date);
+
+    if ((objDate <= toDate && objDate >= fromDate)) {
+      listData.push(val);
+    }
+  }
+  data.results = listData;
   return data;
 };
 
@@ -23,13 +35,6 @@ export const getShiftById = async (id: string) => {
 export const createShifts = async (payload: any) => {
   const api = getAxiosInstance()
   const { data } = await api.post("/shifts", payload);
-  return data;
-};
-
-export const publishShift = async (payload: any) => {
-  const api = getAxiosInstance()
-  const { data } = await api.post("/shifts", payload);
-  
   return data;
 };
 

@@ -3,6 +3,7 @@ export interface ICreateShift {
   date: string;
   startTime: string;
   endTime: string;
+  isPublish: string;
 }
 
 export interface IUpdateShift {
@@ -11,4 +12,5 @@ export interface IUpdateShift {
   startTime?: string;
   endTime?: string;
   weekId? : string;
+  isPublish: string;
 }
