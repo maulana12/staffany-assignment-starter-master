@@ -15,9 +15,9 @@ import ConfirmDialog from "../components/ConfirmDialog";
 import Alert from "@material-ui/lab/Alert";
 import { Link as RouterLink } from "react-router-dom";
 import IconButton from "@material-ui/core/IconButton";
-
+import { format, set } from "date-fns";
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft";
-
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import ChevronRightIcon from "@material-ui/icons/ChevronRight";
 import { Button, Typography } from "@material-ui/core";
 import { setTimeout } from "timers";
@@ -25,21 +25,27 @@ import { setTimeout } from "timers";
 function delay(time: number) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
-var activatePublishBtn:boolean = false;
+var activatePublishBtn: boolean = false;
 var nextDate = 0;
-
+var colorElement: string = "black";
+var weekPublishTimeText:string;
 const useStyles = makeStyles((theme) => ({
   root: {
     minWidth: 275,
   },
+
+  blue_color: {
+    color: "blue",
+  },
+
   fab: {
     position: "absolute",
     bottom: 40,
     right: 40,
     backgroundColor: 'white',
-    color: theme.color.turquoise
+    color: theme.color.turquoise,
   },
- 
+
   weekDate: {
     backgroundColor: theme.color.turqouise,
     color: "blue",
@@ -62,7 +68,7 @@ interface ActionButtonProps {
 const ActionButton: FunctionComponent<ActionButtonProps> = ({
   id,
   onDelete,
-  
+
 }) => {
   return (
     <div >
@@ -85,14 +91,14 @@ const ActionButton: FunctionComponent<ActionButtonProps> = ({
 const Shift = () => {
   const classes = useStyles();
   const history = useHistory();
-  var fromDate = new Date();
-  var toDate = new Date();
-  
+ 
+  var fromDateWeekView = new Date();
+  var toDateWeekView = new Date();
   const [rows, setRows] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errMsg, setErrMsg] = useState("");
-  const [firstDtinWeek, setFirstDtInWeek] = useState<string | null>(null);
-  const [lastDtinWeek, setLastDtInWeek] = useState<string | null>(null);
+  const [firstDtinWeekStr, setFirstDtInWeekStr] = useState<string | null>(null);
+  const [lastDtinWeekStr, setLastDtInWeekStr] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState<boolean>(false);
@@ -105,21 +111,12 @@ const Shift = () => {
     setShowDeleteConfirm(true);
   };
 
-  function weekViewElement(){
-    var element = <b style={{ color: 'turquoise' }}>{firstDtinWeek} - {lastDtinWeek}</b>;
-    
-    if(rows==undefined || rows ==null)
-    {
-      var element = <b style={{ color: 'black' }}>  {firstDtinWeek} - {lastDtinWeek}</b>;
-    }
-      return element;
-  }
-
   const onPublishClick = () => {
 
     setShowPublishConfirm(true);
     if (!showPublishConfirm) {
-      updateShiftForPublish();
+      updateShiftThatPublish();
+      updateWeekView();
     }
     setShowPublishConfirm(false);
   };
@@ -135,13 +132,12 @@ const Shift = () => {
   };
 
   useEffect(() => {
-   
-    updateWeekPicker();
+
     const getData = async () => {
       try {
         setIsLoading(true);
         setErrMsg("");
-        const { results } = await getShiftsPerWeek(fromDate, toDate);
+        const { results } = await getShiftsPerWeek(fromDateWeekView, toDateWeekView);
 
 
         setRows(results);
@@ -154,6 +150,8 @@ const Shift = () => {
     };
 
     getData();
+
+    updateWeekView();
   }, []);
 
   const columns = [
@@ -186,21 +184,16 @@ const Shift = () => {
   ];
 
 
-  const publishShiftForWeek = async () => {
-    setShowPublishConfirm(false);
-
-  };
-
-  const updateShiftForPublish = async () => {
-
+  const updateShiftThatPublish = async () => {
+    var tempActvBtn: boolean = false;
     try {
       setIsLoading(true);
       setErrMsg("");
-      console.log("before");
-      console.log(rows);
+    
       for (var val of rows) {
 
         var id: string = val.id;
+        const startTimeTemp = new Date().toUTCString();
         const payload = {
           name: val.name,
           date: val.date,
@@ -213,9 +206,12 @@ const Shift = () => {
           const { results } = await updateShiftById(id, payload);
           console.log(results);
         }
-        activatePublishBtn = false;
-
+        if (!tempActvBtn) {
+          tempActvBtn = true;
+          colorElement = "#50D9CD";
+        }
       }
+      activatePublishBtn = !tempActvBtn;
 
     } catch (error) {
       const message = getErrorMessage(error);
@@ -224,40 +220,38 @@ const Shift = () => {
       setIsLoading(false);
     }
 
-
   }
 
-
-
   const previousClick = () => {
-
     nextDate = nextDate - 7;
-    updateWeekPicker()
-
+    updateWeekView()
   };
 
   const nextClick = () => {
     nextDate = nextDate + 7;
-    updateWeekPicker()
+    updateWeekView()
   };
 
   function isWeekAlreadyPublishMethod(data: any[]) {
     var actvPublishBtn = false;
+    colorElement = "black";
+   
     console.log(activatePublishBtn);
     for (var val of data) {
       var isPublish = val.isPublish;
       if (isPublish == "N") {
         actvPublishBtn = true;
-      
         break;
+      } else {
+        weekPublishTimeText =  val.updatedAt;
+        colorElement = "#50D9CD";
       }
     }
   
     activatePublishBtn = actvPublishBtn;
-  weekViewElement();
-  };
+  }
 
-  const updateWeekPicker = async () => {
+  const updateWeekView = async () => {
     let wDate = new Date();
     let dDay = wDate.getDay() > 0 ? wDate.getDay() : 7;
 
@@ -265,15 +259,30 @@ const Shift = () => {
     let firstDayWeek = new Date(wDate.setDate(first));
     let lastDayWeek = new Date(wDate.setDate(firstDayWeek.getDate() + 6));
 
-    setFirstDtInWeek(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
-    setLastDtInWeek(lastDayWeek.getUTCDate() + " " + lastDayWeek.toLocaleString('en-us', { month: 'long' }));
-    fromDate = firstDayWeek;
-    toDate = lastDayWeek;
+    setFirstDtInWeekStr(firstDayWeek.getUTCDate() + " " + firstDayWeek.toLocaleString('en-us', { month: 'long' }));
+    setLastDtInWeekStr(lastDayWeek.getUTCDate() + " " + lastDayWeek.toLocaleString('en-us', { month: 'long' }));
+    fromDateWeekView = firstDayWeek;
+    toDateWeekView = lastDayWeek;
     const { results } = await getShiftsPerWeek(firstDayWeek, lastDayWeek);
-    isWeekAlreadyPublishMethod(results);
 
+    isWeekAlreadyPublishMethod(results);
     setRows(results);
+
   };
+
+  function weekViewElement(colorFont: string) {
+    var element = <b style={{ color: colorFont }}>{firstDtinWeekStr} - {lastDtinWeekStr}</b>;
+    return element;
+  }
+
+  function displayUpdateAt() {
+    var element;
+    if(!activatePublishBtn && rows.length!=0)
+    {
+      element=<span> <CheckCircleOutlineIcon htmlColor="#50D9CD"/><span style={{ color: "#50D9CD"}}>Week published on {weekPublishTimeText}</span> </span>;
+    }
+    return element;
+  }
 
   const deleteDataById = async () => {
     try {
@@ -312,28 +321,31 @@ const Shift = () => {
               <></>
             )}
             <Grid container spacing={2}>
-              <Grid item xs={10}>
-
+              <Grid item xs={6}>
                 <Typography >
-                  <IconButton  onClick={previousClick}>
+                  <IconButton onClick={previousClick}>
                     <ChevronLeftIcon />
                   </IconButton>
-                  {weekViewElement()}
+                  {weekViewElement(colorElement)}
 
                   <IconButton >
                     <ChevronRightIcon onClick={nextClick} />
                   </IconButton>
                 </Typography>
               </Grid>
-              <Grid item xs={2}>
 
+              <Grid item xs={4}>
+                <Typography >
+                  {displayUpdateAt()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={2}>
                 <Button variant="contained"
                   disabled={!activatePublishBtn}
                   color="primary"
                   onClick={(e) => onPublishClick()}
                   className={classes.publishBtn}>Publish
-
-
                 </Button>
               </Grid>
 
@@ -351,6 +363,7 @@ const Shift = () => {
         </Card>
       </Grid>
       <Fab
+        disabled={!activatePublishBtn && rows.length!=0}
         size="medium"
         aria-label="add"
         className={classes.fab}
